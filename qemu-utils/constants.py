@@ -5,3 +5,5 @@
 # you may not use this file except in compliance with the License.
 # The license can be obtained at the root of this document.
 #
+
+QEMU_PATH = 'qemu:///system'
