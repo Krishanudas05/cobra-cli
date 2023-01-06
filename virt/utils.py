@@ -10,6 +10,7 @@ import libvirt
 import subprocess
 import time
 import virt.constants
+import utils.misc
 from xml.dom import minidom
 from xml.etree import ElementTree
 
@@ -72,7 +73,7 @@ def get_vm_info(vm_name: str):
 # @param: delay - Delay between each data collection
 #         dataset - List to store the data
 #         vm_name - Name of the VM
-def get_vm_data_live(delay: int, dataset: list, vm_name: str):
+def get_vm_data_live(delay: int, vm_name: str):
     conn = libvirt.open(virt.constants.QEMU_PATH)
     if conn == None:
         print('Failed to open connection to qemu:///system')
@@ -126,11 +127,11 @@ def get_vm_data_live(delay: int, dataset: list, vm_name: str):
         }
 
         # Store the data in a tuple
-        data = [cpu_usage, mem_usage, net_usage, io_usage]
+        data = str([cpu_usage, mem_usage, net_usage, io_usage])
         print(data)
-        
+
         # Append the data to the dataset
-        dataset.append(data)
+        utils.misc.write_to_file(virt.constants.DATASET_PATH, data)
 
         # Sleep for the specified delay
         time.sleep(delay)
