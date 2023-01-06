@@ -63,6 +63,7 @@ def get_vm_info(vm_name: str):
         vm_data['os_arch'] = xml.getElementsByTagName('os')[0].getElementsByTagName('type')[0].getAttribute('arch')
         vm_data['os_machine'] = xml.getElementsByTagName('os')[0].getElementsByTagName('type')[0].getAttribute('machine')
         vm_data['os_boot'] = xml.getElementsByTagName('os')[0].getElementsByTagName('boot')[0].getAttribute('dev')
+        vm_data['disk_image'] = xml.getElementsByTagName('disk')[0].getElementsByTagName('source')[0].getAttribute('file')
     except subprocess.CalledProcessError as e:
         print(e)
     return vm_data
@@ -92,11 +93,14 @@ def get_vm_data_live(delay: int, dataset: list, vm_name: str):
             break
 
         # Get CPU and memory usage
-        cpu_usage = dom.getCPUStats(True)[0]['cpu_time']
+        cpu_usage = {}
+        cpu = dom.getCPUStats(True)[0]
+        cpu_usage['cpu_time'] = cpu['cpu_time']
+        cpu_usage['system_time'] = cpu['system_time']
+        cpu_usage['user_time'] = cpu['user_time']
         mem_usage = dom.memoryStats()['rss']    
 
         # Get current network usage in bytes
-        tree = ElementTree.fromstring(dom.XMLDesc())
         iface = tree.find('devices/interface/target').get('dev')
         interface_stats = dom.interfaceStats(iface)
         net_usage = {
@@ -110,9 +114,21 @@ def get_vm_data_live(delay: int, dataset: list, vm_name: str):
             'tx_drop': interface_stats[7]
         }
 
-        # Store the data in a tuple
-        data = [cpu_usage, mem_usage, net_usage]
+        # I/O usage
+        block_device = tree.find('devices/disk/source').get('file')
+        (rd_req, rd_bytes, wr_req, wr_bytes, errs) = dom.blockStats(block_device)
+        io_usage = {
+            'rd_req': rd_req,
+            'rd_bytes': rd_bytes,
+            'wr_req': wr_req,
+            'wr_bytes': wr_bytes,
+            'errs': errs
+        }
 
+        # Store the data in a tuple
+        data = [cpu_usage, mem_usage, net_usage, io_usage]
+        print(data)
+        
         # Append the data to the dataset
         dataset.append(data)
 
