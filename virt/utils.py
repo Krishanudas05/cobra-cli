@@ -11,6 +11,7 @@ import subprocess
 import time
 import virt.constants
 import utils.misc
+import utilization.cpu
 from xml.dom import minidom
 from xml.etree import ElementTree
 
