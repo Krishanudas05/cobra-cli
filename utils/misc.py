@@ -8,8 +8,16 @@
 
 # Miscellaneous utilities used by vm-mgr-cli
 
+import os
+
 # Write to file
 def write_to_file(file_path: str, data):
-    """Writes data to a file"""
+    """
+    Writes to a file, in append mode.
+    If the given file path does not exist, it will create the file and then write to it.
+    """
+    if not os.path.isfile(file_path):
+        os.mknod(file_path)
+    
     with open(file_path, 'a') as f:
-        f.write(data + "\n")
+        f.write(data)
