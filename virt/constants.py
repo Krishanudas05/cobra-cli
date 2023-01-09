@@ -6,6 +6,6 @@
 # The license can be obtained at the root of this document.
 #
 
-QEMU_PATH = 'qemu:///system'
-
 CONFIG_PATH = "configs/"
+CLI_CONFIG = CONFIG_PATH + "cli-config.ini"
+VM_CONFIG = CONFIG_PATH + "vm.ini"

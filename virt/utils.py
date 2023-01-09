@@ -9,6 +9,7 @@
 import libvirt
 import subprocess
 import time
+import configs.read_configs
 import virt.constants
 import utils.misc
 import utilization.cpu
@@ -22,6 +23,8 @@ from xml.etree import ElementTree
 # - Disk usage
 # - Network usage
 
+QEMU_PATH = configs.read_configs.read_value('QEMU', 'uri', virt.constants.VM_CONFIG)
+
 # Utilities to retrieve information about the VM
 # using libvirt.
 
@@ -30,7 +33,7 @@ def get_all_vm_names():
     """Returns a list of all the VMs running on the host"""
     vm_names = []
     try:
-        vm_names = libvirt.open(virt.constants.QEMU_PATH).listAllDomains()
+        vm_names = libvirt.open(QEMU_PATH).listAllDomains()
         if len(vm_names) != 0: 
             vm_names = [vm.name() for vm in vm_names]
         print(vm_names)
@@ -44,7 +47,7 @@ def get_vm_info(vm_name: str):
     """Returns a dictionary containing the data about the VM"""
     vm_data = {}
     try:
-        conn = libvirt.open(virt.constants.QEMU_PATH)
+        conn = libvirt.open(QEMU_PATH)
         if not conn: 
             print('Failed to open connection to qemu:///system')
             exit(1)
@@ -75,7 +78,7 @@ def get_vm_info(vm_name: str):
 #         dataset - List to store the data
 #         vm_name - Name of the VM
 def get_vm_data_live(delay: int, vm_name: str):
-    conn = libvirt.open(virt.constants.QEMU_PATH)
+    conn = libvirt.open(QEMU_PATH)
     if conn == None:
         print('Failed to open connection to qemu:///system')
         exit(1)
@@ -132,7 +135,7 @@ def get_vm_data_live(delay: int, vm_name: str):
         print(data)
 
         # Append the data to the dataset
-        DATASET_PATH = virt.constants.CONFIG_PATH + dom.name() + ".dat"
+        DATASET_PATH = configs.read_configs.read_value('DEFAULT', 'config_path', virt.constants.CLI_CONFIG) + dom.name() + ".dat"
         utils.misc.write_to_file(DATASET_PATH, data)
 
         # Sleep for the specified delay
