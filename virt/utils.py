@@ -132,7 +132,8 @@ def get_vm_data_live(delay: int, vm_name: str):
         print(data)
 
         # Append the data to the dataset
-        utils.misc.write_to_file(virt.constants.DATASET_PATH, data)
+        DATASET_PATH = virt.constants.CONFIG_PATH + dom.name() + ".dat"
+        utils.misc.write_to_file(DATASET_PATH, data)
 
         # Sleep for the specified delay
         time.sleep(delay)

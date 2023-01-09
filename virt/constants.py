@@ -8,4 +8,4 @@
 
 QEMU_PATH = 'qemu:///system'
 
-DATASET_PATH = 'configs/dataset.dat'
+CONFIG_PATH = "configs/"
