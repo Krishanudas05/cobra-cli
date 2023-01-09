@@ -20,4 +20,4 @@ def write_to_file(file_path: str, data):
         os.mknod(file_path)
     
     with open(file_path, 'a') as f:
-        f.write(data)
+        f.write(data + "\n")
