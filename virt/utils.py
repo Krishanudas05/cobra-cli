@@ -12,7 +12,6 @@ import time
 import configs.read_configs
 import virt.constants
 import utils.misc
-import utilization.cpu
 from xml.dom import minidom
 from xml.etree import ElementTree
 
@@ -135,7 +134,7 @@ def get_vm_data_live(delay: int, vm_name: str):
         print(data)
 
         # Append the data to the dataset
-        DATASET_PATH = configs.read_configs.read_value('DEFAULT', 'config_path', virt.constants.CLI_CONFIG) + dom.name() + ".dat"
+        DATASET_PATH = configs.read_configs.read_value('DEFAULT', 'dataset_path', virt.constants.CLI_CONFIG) + dom.name() + ".dat"
         utils.misc.write_to_file(DATASET_PATH, data)
 
         # Sleep for the specified delay

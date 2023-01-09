@@ -3,3 +3,4 @@ virt/__pycache__
 utils/__pycache__
 utilization/__pycache__
 configs/*.dat
+configs/datasets/*.dat
