@@ -36,7 +36,6 @@ def get_all_vm_names():
         vm_names = libvirt.open(QEMU_PATH).listAllDomains()
         if len(vm_names) != 0: 
             vm_names = [vm.name() for vm in vm_names]
-        print(vm_names)
     except subprocess.CalledProcessError as e:
         print(e)
     return vm_names
