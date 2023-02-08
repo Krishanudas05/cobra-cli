@@ -36,8 +36,8 @@ def get_all_vm_names():
         vm_names = libvirt.open(QEMU_PATH).listAllDomains()
         if len(vm_names) != 0: 
             vm_names = [vm.name() for vm in vm_names]
-    except subprocess.CalledProcessError as e:
-        print(e)
+    except libvirt.libvirtError:
+        print('[!] Failed to open connection to ' + QEMU_PATH)
     return vm_names
 
 # Get VM information
@@ -79,9 +79,9 @@ def get_vm_info(vm_name: str):
 def get_vm_data_live(delay: int, vm_name: str):
     conn = libvirt.open(QEMU_PATH)
     if conn == None:
-        print('Failed to open connection to qemu:///system')
+        print('[!] Failed to open connection to ' + QEMU_PATH)
         exit(1)
-    
+    print('[+] Connected to ' + QEMU_PATH)
     dom = conn.lookupByName(vm_name)
     if dom == None:
         print('Failed to find the domain ' + vm_name)
@@ -151,8 +151,5 @@ def get_vm_data_live(delay: int, vm_name: str):
         # Append the data to the dataset
         DATASET_PATH = configs.read_configs.read_value('DEFAULT', 'dataset_path', virt.constants.CLI_CONFIG) + dom.name() + ".dat"
         utils.misc.write_to_file(DATASET_PATH, data)
-
-        # Sleep for the specified delay
-        time.sleep(delay)
     
     conn.close()

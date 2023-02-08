@@ -12,11 +12,15 @@ import libvirt
 import virt.constants
 import virt.utils
 
+print("[-] Initializing Cobra Hypervisor IPS Agent...")
+print("[-] Before proceeding, please make sure that you have started the VM instances you want to monitor.")
+
 vm_names = virt.utils.get_all_vm_names()
 for vm_name in vm_names:
     try:
         # put all data collection functions on different thread
         # and then join them
+        print("[+] Starting data collection for VM: " + vm_name)
         delay = int(configs.read_configs.read_value('DATA_COLLECTION', 'delay', virt.constants.VM_CONFIG))
         t = threading.Thread(target=virt.utils.get_vm_data_live, args=(delay, vm_name))
         t.start()
