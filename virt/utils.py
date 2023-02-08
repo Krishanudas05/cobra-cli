@@ -11,6 +11,7 @@ import subprocess
 import time
 import configs.read_configs
 import virt.constants
+import utilization.cpu
 import utils.misc
 from xml.dom import minidom
 from xml.etree import ElementTree
@@ -96,12 +97,27 @@ def get_vm_data_live(delay: int, vm_name: str):
             running = False
             break
 
-        # Get CPU and memory usage
-        cpu_usage = {}
-        cpu = dom.getCPUStats(True)[0]
-        cpu_usage['cpu_time'] = cpu['cpu_time']
-        cpu_usage['system_time'] = cpu['system_time']
-        cpu_usage['user_time'] = cpu['user_time']
+        # Get CPU usage, parse into percentage
+        previous_cpu_usage = {}
+        previous_cpu = dom.getCPUStats(True)[0]
+        previous_cpu_usage['cpu_time'] = previous_cpu['cpu_time']
+        previous_timestamp = time.time()
+
+        delay = int(configs.read_configs.read_value('DATA_COLLECTION', 'delay', virt.constants.VM_CONFIG))
+        time.sleep(delay)
+
+        current_cpu_usage = {}
+        current_cpu = dom.getCPUStats(True)[0]
+        current_cpu_usage['cpu_time'] = current_cpu['cpu_time']
+        current_timestamp = time.time()
+
+        num_cpus = dom.maxVcpus()
+
+        cpu_usage_percentage = {
+            'cpu_usage_percentage': utilization.cpu.convert_cpu_time_to_percentage(current_cpu_usage['cpu_time'], previous_cpu_usage['cpu_time'], current_timestamp, previous_timestamp, num_cpus)
+        }
+
+        # Get the memory usage
         mem_usage = dom.memoryStats()['rss']    
 
         # Get current network usage in bytes
@@ -130,7 +146,7 @@ def get_vm_data_live(delay: int, vm_name: str):
         }
 
         # Store the data in a tuple
-        data = str([cpu_usage, mem_usage, net_usage, io_usage])
+        data = str([cpu_usage_percentage, mem_usage, net_usage, io_usage])
         print(data)
 
         # Append the data to the dataset

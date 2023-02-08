@@ -6,6 +6,7 @@
 # The license can be obtained at the root of this document.
 #
 
+import configs
 import threading
 import libvirt
 import virt.constants
@@ -16,7 +17,8 @@ for vm_name in vm_names:
     try:
         # put all data collection functions on different thread
         # and then join them
-        t = threading.Thread(target=virt.utils.get_vm_data_live, args=(1, vm_name))
+        delay = int(configs.read_configs.read_value('DATA_COLLECTION', 'delay', virt.constants.VM_CONFIG))
+        t = threading.Thread(target=virt.utils.get_vm_data_live, args=(delay, vm_name))
         t.start()
         t.join()
     except libvirt.libvirtError as e:
