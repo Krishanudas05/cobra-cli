@@ -17,8 +17,7 @@
 def convert_cpu_time_to_percentage(current_cpu_time: int, previous_cpu_time: int, current_time: int, previous_time: int, num_cpus: int):
     """Converts CPU time to percentage"""
     pcentbase = ((current_cpu_time - previous_cpu_time) * 100.0) / ((current_time - previous_time) * 1000 * 1000 * 1000)
-    cpuHostPercent = pcentbase / num_cpus
     # Under RHEL-5.9 using a XEN HV guestcpus can be 0 during shutdown
     # so play safe and check it.
     cpuGuestPercent = num_cpus > 0 and pcentbase / num_cpus or 0
-    return cpuHostPercent, cpuGuestPercent
+    return cpuGuestPercent
