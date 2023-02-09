@@ -16,6 +16,9 @@ import utils.misc
 from xml.dom import minidom
 from xml.etree import ElementTree
 
+# Define debug status
+debug = configs.read_configs.read_value('DEFAULT', 'debug', virt.constants.CLI_CONFIG)
+
 # Utilities to interact with libvirt to retrieve
 # information about the VM including
 # - CPU usage
@@ -146,7 +149,7 @@ def get_vm_data_live(delay: int, vm_name: str):
 
         # Store the data in a tuple
         data = str([cpu_usage_percentage, mem_usage, net_usage, io_usage])
-        print(data)
+        if (debug): print(data)         
 
         # Append the data to the dataset
         DATASET_PATH = configs.read_configs.read_value('DEFAULT', 'dataset_path', virt.constants.CLI_CONFIG) + dom.name() + ".dat"
