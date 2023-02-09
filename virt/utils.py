@@ -113,14 +113,16 @@ def get_vm_data_live(delay: int, vm_name: str):
         current_cpu_usage['cpu_time'] = current_cpu['cpu_time']
         current_timestamp = time.time()
 
+        # Get the memory usage
+        mem_usage = (dom.memoryStats()['rss'] / dom.memoryStats()['actual']) * 100
+
+        if (debug == True): print(dom.memoryStats())
+
         num_cpus = dom.maxVcpus()
 
         cpu_usage_percentage = {
             'cpu_usage_percentage': utilization.cpu.convert_cpu_time_to_percentage(current_cpu_usage['cpu_time'], previous_cpu_usage['cpu_time'], current_timestamp, previous_timestamp, num_cpus)
-        }
-
-        # Get the memory usage
-        mem_usage = dom.memoryStats()['rss']    
+        }   
 
         # Get current network usage in bytes
         iface = tree.find('devices/interface/target').get('dev')
@@ -149,7 +151,7 @@ def get_vm_data_live(delay: int, vm_name: str):
 
         # Store the data in a tuple
         data = str([cpu_usage_percentage, mem_usage, net_usage, io_usage])
-        if (debug): print(data)         
+        if (debug == True): print(data)         
 
         # Append the data to the dataset
         DATASET_PATH = configs.read_configs.read_value('DEFAULT', 'dataset_path', virt.constants.CLI_CONFIG) + dom.name() + ".dat"
