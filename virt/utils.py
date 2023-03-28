@@ -99,6 +99,14 @@ def get_vm_data_live(delay: int, vm_name: str):
             running = False
             break
 
+        # Get current network usage in bytes
+        iface = tree.find('devices/interface/target').get('dev')
+        prev_interface_stats = dom.interfaceStats(iface)
+        
+        # I/O usage
+        block_device = tree.find('devices/disk/source').get('file')
+        (prev_rd_req, prev_rd_bytes, prev_wr_req, prev_wr_bytes, prev_errs) = dom.blockStats(block_device)
+
         # Get CPU usage, parse into percentage
         previous_cpu_usage = {}
         previous_cpu = dom.getCPUStats(True)[0]
@@ -126,27 +134,27 @@ def get_vm_data_live(delay: int, vm_name: str):
 
         # Get current network usage in bytes
         iface = tree.find('devices/interface/target').get('dev')
-        interface_stats = dom.interfaceStats(iface)
+        cur_interface_stats = dom.interfaceStats(iface)
         net_usage = {
-            'rx_bytes': interface_stats[0],
-            'rx_packets': interface_stats[1],
-            'rx_errs': interface_stats[2],
-            'rx_drop': interface_stats[3],
-            'tx_bytes': interface_stats[4],
-            'tx_packets': interface_stats[5],
-            'tx_errs': interface_stats[6],
-            'tx_drop': interface_stats[7]
+            'rx_bytes': cur_interface_stats[0] - prev_interface_stats[0],
+            'rx_packets': cur_interface_stats[1] - prev_interface_stats[1],
+            'rx_errs': cur_interface_stats[2] - prev_interface_stats[2],
+            'rx_drop': cur_interface_stats[3] - prev_interface_stats[3],
+            'tx_bytes': cur_interface_stats[4] - prev_interface_stats[4],
+            'tx_packets': cur_interface_stats[5] - prev_interface_stats[5],
+            'tx_errs': cur_interface_stats[6] - prev_interface_stats[6],
+            'tx_drop': cur_interface_stats[7] - prev_interface_stats[7]
         }
 
         # I/O usage
         block_device = tree.find('devices/disk/source').get('file')
         (rd_req, rd_bytes, wr_req, wr_bytes, errs) = dom.blockStats(block_device)
         io_usage = {
-            'rd_req': rd_req,
-            'rd_bytes': rd_bytes,
-            'wr_req': wr_req,
-            'wr_bytes': wr_bytes,
-            'errs': errs
+            'rd_req': rd_req - prev_rd_req,
+            'rd_bytes': rd_bytes - prev_rd_bytes,
+            'wr_req': wr_req - prev_wr_req,
+            'wr_bytes': wr_bytes - prev_wr_bytes,
+            'errs': errs - prev_errs
         }
 
         # Store the data in a tuple
