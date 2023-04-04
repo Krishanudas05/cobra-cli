@@ -122,7 +122,9 @@ def get_vm_data_live(delay: int, vm_name: str):
         current_timestamp = time.time()
 
         # Get the memory usage
-        mem_usage = (dom.memoryStats()['rss'] / dom.memoryStats()['actual']) * 100
+        mem_usage = {
+            "mem_usage": (dom.memoryStats()['rss'] / dom.memoryStats()['actual']) * 100
+        }
 
         if (debug == True): print(dom.memoryStats())
 
