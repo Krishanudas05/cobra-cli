@@ -10,6 +10,7 @@ import libvirt
 import subprocess
 import time
 import configs.read_configs
+import os
 import virt.constants
 import utilization.cpu
 import utils.misc
@@ -75,11 +76,9 @@ def get_vm_info(vm_name: str):
         print(e)
     return vm_data
 
-# Get VM data live
-# @param: delay - Delay between each data collection
-#         dataset - List to store the data
-#         vm_name - Name of the VM
-def get_vm_data_live(delay: int, vm_name: str):
+# Turn off the VM
+# @param: vm_name - Name of the VM
+def turn_off_vm(vm_name: str):
     conn = libvirt.open(QEMU_PATH)
     if conn == None:
         print('[!] Failed to open connection to ' + QEMU_PATH)
@@ -88,6 +87,26 @@ def get_vm_data_live(delay: int, vm_name: str):
     dom = conn.lookupByName(vm_name)
     if dom == None:
         print('Failed to find the domain ' + vm_name)
+        exit(1)
+    dom.destroy()
+    conn.close()
+
+# Get VM data live, and check for intrusions
+# @param: delay - Delay between each data collection
+#         dataset - List to store the data
+#         vm_name - Name of the VM
+def get_vm_data_live(delay: int, vm_name: str, brutal: bool):
+    conn = libvirt.open(QEMU_PATH)
+    if conn == None:
+        print('[!] Failed to open connection to ' + QEMU_PATH)
+        exit(1)
+    print('[+] Connected to ' + QEMU_PATH)
+    dom = conn.lookupByName(vm_name)
+    if dom == None:
+        print('Failed to find the domain ' + vm_name)
+        exit(1)
+    if dom.state()[0] != libvirt.VIR_DOMAIN_RUNNING:
+        print('[!] VM ' + vm_name + ' is not running.')
         exit(1)
     
     running = True
@@ -166,5 +185,33 @@ def get_vm_data_live(delay: int, vm_name: str):
         # Append the data to the dataset
         DATASET_PATH = configs.read_configs.read_value('DEFAULT', 'dataset_path', virt.constants.CLI_CONFIG) + dom.name() + ".dat"
         utils.misc.write_to_file(DATASET_PATH, data)
-    
+
+        if (cpu_usage_percentage['cpu_usage_percentage'] > 100):
+            print('[!] CPU usage is above 100%')
+            print('[!] CPU usage is ' + str(cpu_usage_percentage['cpu_usage_percentage']) + '%')
+            print('[!] Suspected intrusion detected.')
+            if (brutal):
+                print('[!] Shutting down VM.')
+                turn_off_vm(dom.name())
+            else:
+                print('[!] Brutal mode is disabled, doing nothing.')
+
+        if (net_usage['rx_bytes'] > 10000000 or net_usage['tx_bytes'] > 10000000):
+            print('[!] Network usage is above 10MB/s')
+            print('[!] Suspected intrusion detected.')
+            if (brutal):
+                print('[!] Shutting down VM.')
+                turn_off_vm(dom.name())
+            else:
+                print('[!] Brutal mode is disabled, doing nothing.')
+
+        if (net_usage['rx_packets'] > 10000 or net_usage['tx_packets'] > 10000):
+            print('[!] Network usage is above 10K packets/s')
+            print('[!] Suspected intrusion detected.')
+            if (brutal):
+                print('[!] Shutting down VM.')
+                turn_off_vm(dom.name()) 
+            else:
+                print('[!] Brutal mode is disabled, doing nothing.')
+                
     conn.close()

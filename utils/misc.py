@@ -10,6 +10,21 @@
 
 import os
 
+def read_lists_from_file(file_path: str):
+    """
+    Reads from a file and returns a list of lines.
+    If the given file path does not exist, it will return an empty list.
+    """
+    if not os.path.isfile(file_path):
+        return []
+    
+    with open(file_path, 'r') as f:
+        d = []
+        for line in f:
+            row = eval(line)
+            d.append(row)
+        return d
+
 # Write to file
 def write_to_file(file_path: str, data):
     """
