@@ -19,6 +19,7 @@ from xml.etree import ElementTree
 
 # Define debug status
 debug = configs.read_configs.read_value('DEFAULT', 'debug', virt.constants.CLI_CONFIG)
+brutal = configs.read_configs.read_value('DEFAULT', 'brutal', virt.constants.CLI_CONFIG)
 
 # Utilities to interact with libvirt to retrieve
 # information about the VM including
@@ -95,20 +96,20 @@ def turn_off_vm(vm_name: str):
 # @param: delay - Delay between each data collection
 #         dataset - List to store the data
 #         vm_name - Name of the VM
-def get_vm_data_live(delay: int, vm_name: str, brutal: bool):
+def get_vm_data_live(delay: int, vm_name: str):
     conn = libvirt.open(QEMU_PATH)
     if conn == None:
         print('[!] Failed to open connection to ' + QEMU_PATH)
-        exit(1)
+        return
     print('[+] Connected to ' + QEMU_PATH)
     dom = conn.lookupByName(vm_name)
     if dom == None:
         print('Failed to find the domain ' + vm_name)
-        exit(1)
+        return
     if dom.state()[0] != libvirt.VIR_DOMAIN_RUNNING:
         print('[!] VM ' + vm_name + ' is not running.')
-        exit(1)
-    
+        return
+
     running = True
     tree = ElementTree.fromstring(dom.XMLDesc())
 
@@ -190,28 +191,19 @@ def get_vm_data_live(delay: int, vm_name: str, brutal: bool):
             print('[!] CPU usage is above 100%')
             print('[!] CPU usage is ' + str(cpu_usage_percentage['cpu_usage_percentage']) + '%')
             print('[!] Suspected intrusion detected.')
-            if (brutal):
-                print('[!] Shutting down VM.')
-                turn_off_vm(dom.name())
-            else:
-                print('[!] Brutal mode is disabled, doing nothing.')
+            print('[!] Shutting down VM.')
+            turn_off_vm(dom.name())
 
-        if (net_usage['rx_bytes'] > 10000000 or net_usage['tx_bytes'] > 10000000):
-            print('[!] Network usage is above 10MB/s')
+        if (net_usage['rx_bytes'] > 1500000 or net_usage['tx_bytes'] > 1500000):
+            print('[!] Network usage is above 1.5MB/s')
             print('[!] Suspected intrusion detected.')
-            if (brutal):
-                print('[!] Shutting down VM.')
-                turn_off_vm(dom.name())
-            else:
-                print('[!] Brutal mode is disabled, doing nothing.')
+            print('[!] Shutting down VM.')
+            turn_off_vm(dom.name())
 
-        if (net_usage['rx_packets'] > 10000 or net_usage['tx_packets'] > 10000):
-            print('[!] Network usage is above 10K packets/s')
+        if (net_usage['rx_packets'] > 20000 or net_usage['tx_packets'] > 20000):
+            print('[!] Network usage is above 20K packets/s')
             print('[!] Suspected intrusion detected.')
-            if (brutal):
-                print('[!] Shutting down VM.')
-                turn_off_vm(dom.name()) 
-            else:
-                print('[!] Brutal mode is disabled, doing nothing.')
-                
+            print('[!] Shutting down VM.')
+            turn_off_vm(dom.name()) 
+
     conn.close()

@@ -22,7 +22,7 @@ def begin_monitoring():
             # put all data collection functions on different thread
             # and then join them
             print("[+] Starting data collection for VM: " + vm_name)
-            t = threading.Thread(target=virt.utils.get_vm_data_live, args=(int(configs.read_configs.read_value('DATA_COLLECTION', 'delay', virt.constants.VM_CONFIG)), vm_name, False))
+            t = threading.Thread(target=virt.utils.get_vm_data_live, args=(int(configs.read_configs.read_value('DATA_COLLECTION', 'delay', virt.constants.VM_CONFIG)), vm_name))
             t.daemon = True
             t.start()
             t.join()
@@ -34,10 +34,10 @@ def console():
         command = input("[main@cobra]~$ ")
         if command == "help":
             print("[-] Available commands:")
-            print("     [-] help: Displays this help message")
-            print("     [-] start: Starts monitoring the VMs")
-            print("     [-] stop: Stops monitoring the VMs")
-            print("     [-] exit: Exits the program")
+            print("     help: Displays this help message")
+            print("     start: Starts monitoring the VMs")
+            print("     stop: Stops monitoring the VMs")
+            print("     exit: Exits the program")
         elif command == "start":
             print("[-] Starting monitoring...")
             begin_monitoring()
