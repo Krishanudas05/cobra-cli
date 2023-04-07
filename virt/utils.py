@@ -10,7 +10,7 @@ import libvirt
 import subprocess
 import time
 import configs.read_configs
-import os
+import csv
 import virt.constants
 import utilization.cpu
 import utils.misc
@@ -19,7 +19,6 @@ from xml.etree import ElementTree
 
 # Define debug status
 debug = configs.read_configs.read_value('DEFAULT', 'debug', virt.constants.CLI_CONFIG)
-brutal = configs.read_configs.read_value('DEFAULT', 'brutal', virt.constants.CLI_CONFIG)
 
 # Utilities to interact with libvirt to retrieve
 # information about the VM including
@@ -141,11 +140,6 @@ def get_vm_data_live(delay: int, vm_name: str):
         current_cpu_usage['cpu_time'] = current_cpu['cpu_time']
         current_timestamp = time.time()
 
-        # Get the memory usage
-        mem_usage = {
-            "mem_usage": (dom.memoryStats()['rss'] / dom.memoryStats()['actual']) * 100
-        }
-
         if (debug == True): print(dom.memoryStats())
 
         num_cpus = dom.maxVcpus()
@@ -160,12 +154,8 @@ def get_vm_data_live(delay: int, vm_name: str):
         net_usage = {
             'rx_bytes': cur_interface_stats[0] - prev_interface_stats[0],
             'rx_packets': cur_interface_stats[1] - prev_interface_stats[1],
-            'rx_errs': cur_interface_stats[2] - prev_interface_stats[2],
-            'rx_drop': cur_interface_stats[3] - prev_interface_stats[3],
             'tx_bytes': cur_interface_stats[4] - prev_interface_stats[4],
             'tx_packets': cur_interface_stats[5] - prev_interface_stats[5],
-            'tx_errs': cur_interface_stats[6] - prev_interface_stats[6],
-            'tx_drop': cur_interface_stats[7] - prev_interface_stats[7]
         }
 
         # I/O usage
@@ -176,34 +166,55 @@ def get_vm_data_live(delay: int, vm_name: str):
             'rd_bytes': rd_bytes - prev_rd_bytes,
             'wr_req': wr_req - prev_wr_req,
             'wr_bytes': wr_bytes - prev_wr_bytes,
-            'errs': errs - prev_errs
         }
 
         # Store the data in a tuple
-        data = str([cpu_usage_percentage, mem_usage, net_usage, io_usage])
+        data = {
+            "cpu_usage_percentage": cpu_usage_percentage['cpu_usage_percentage'],
+            "rx_bytes": net_usage['rx_bytes'],
+            "rx_packets": net_usage['rx_packets'],
+            "tx_bytes": net_usage['tx_bytes'],
+            "tx_packets": net_usage['tx_packets'],
+            "rd_req": io_usage['rd_req'],
+            "rd_bytes": io_usage['rd_bytes'],
+            "wr_req": io_usage['wr_req'],
+            "wr_bytes": io_usage['wr_bytes'],
+        }
         if (debug == True): print(data)         
 
-        # Append the data to the dataset
-        DATASET_PATH = configs.read_configs.read_value('DEFAULT', 'dataset_path', virt.constants.CLI_CONFIG) + dom.name() + ".dat"
-        utils.misc.write_to_file(DATASET_PATH, data)
+        # Write to CSV
+        title = ['cpu_usage_percentage', 'rx_bytes', 'rx_packets', 'tx_bytes', 'tx_packets', 'rd_req', 'rd_bytes', 'wr_req', 'wr_bytes']
+        with open(configs.read_configs.read_value('DEFAULT', 'dataset_path', virt.constants.CLI_CONFIG) + dom.name() + ".csv", 'a') as f:
+            writer = csv.DictWriter(f, fieldnames=title)
+            writer.writerow(data)
+            f.close()
 
         if (cpu_usage_percentage['cpu_usage_percentage'] > 100):
             print('[!] CPU usage is above 100%')
             print('[!] CPU usage is ' + str(cpu_usage_percentage['cpu_usage_percentage']) + '%')
             print('[!] Suspected intrusion detected.')
-            print('[!] Shutting down VM.')
-            turn_off_vm(dom.name())
-
-        if (net_usage['rx_bytes'] > 1500000 or net_usage['tx_bytes'] > 1500000):
+            print('[!] Shutting down VM...')
+            turn_off_vm(vm_name)
+        elif (net_usage['rx_bytes'] > 1500000 or net_usage['tx_bytes'] > 1500000):
             print('[!] Network usage is above 1.5MB/s')
             print('[!] Suspected intrusion detected.')
-            print('[!] Shutting down VM.')
-            turn_off_vm(dom.name())
-
-        if (net_usage['rx_packets'] > 20000 or net_usage['tx_packets'] > 20000):
+            print('[!] Shutting down VM...')
+            turn_off_vm(vm_name)
+        elif (net_usage['rx_packets'] > 20000 or net_usage['tx_packets'] > 20000):
             print('[!] Network usage is above 20K packets/s')
             print('[!] Suspected intrusion detected.')
-            print('[!] Shutting down VM.')
-            turn_off_vm(dom.name()) 
+            print('[!] Shutting down VM...')
+            turn_off_vm(vm_name)
+        elif (io_usage['rd_bytes'] > 15000000 or io_usage['wr_bytes'] > 15000000):
+            print('[!] I/O usage is above 15MB/s')
+            print('[!] Suspected intrusion detected.')
+            print('[!] Shutting down VM...')
+            turn_off_vm(vm_name)
+        
+        if (io_usage['rd_req'] > 20000 or io_usage['wr_req'] > 20000):
+            print('[!] I/O usage is above 20K requests/s')
+            print('[!] Suspected intrusion detected.')
+            print('[!] Shutting down VM...')
+            turn_off_vm(vm_name)
 
     conn.close()
