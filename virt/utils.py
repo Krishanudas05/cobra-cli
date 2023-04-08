@@ -189,7 +189,7 @@ def get_vm_data_live(delay: int, vm_name: str):
             writer.writerow(data)
             f.close()
 
-        if (cpu_usage_percentage['cpu_usage_percentage'] > 78.539718):
+        if (cpu_usage_percentage['cpu_usage_percentage'] > 52.359812):
             print('[!] CPU usage is above threshold')
             print('[!] CPU usage is ' + str(cpu_usage_percentage['cpu_usage_percentage']) + '%')
             print('[!] Suspected intrusion detected.')
