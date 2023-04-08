@@ -189,19 +189,19 @@ def get_vm_data_live(delay: int, vm_name: str):
             writer.writerow(data)
             f.close()
 
-        if (cpu_usage_percentage['cpu_usage_percentage'] > 100):
-            print('[!] CPU usage is above 100%')
+        if (cpu_usage_percentage['cpu_usage_percentage'] > 78.539718):
+            print('[!] CPU usage is above threshold')
             print('[!] CPU usage is ' + str(cpu_usage_percentage['cpu_usage_percentage']) + '%')
             print('[!] Suspected intrusion detected.')
             print('[!] Shutting down VM...')
             turn_off_vm(vm_name)
-        elif (net_usage['rx_bytes'] > 1500000 or net_usage['tx_bytes'] > 1500000):
-            print('[!] Network usage is above 1.5MB/s')
+        elif (net_usage['rx_bytes'] > 21920510 or net_usage['tx_bytes'] > 21645160):
+            print('[!] Network usage is above threshold')
             print('[!] Suspected intrusion detected.')
             print('[!] Shutting down VM...')
             turn_off_vm(vm_name)
-        elif (net_usage['rx_packets'] > 20000 or net_usage['tx_packets'] > 20000):
-            print('[!] Network usage is above 20K packets/s')
+        elif (net_usage['rx_packets'] > 45538.329358 or net_usage['tx_packets'] > 35023.79633):
+            print('[!] Network usage is above threshold')
             print('[!] Suspected intrusion detected.')
             print('[!] Shutting down VM...')
             turn_off_vm(vm_name)
@@ -210,8 +210,7 @@ def get_vm_data_live(delay: int, vm_name: str):
             print('[!] Suspected intrusion detected.')
             print('[!] Shutting down VM...')
             turn_off_vm(vm_name)
-        
-        if (io_usage['rd_req'] > 20000 or io_usage['wr_req'] > 20000):
+        elif (io_usage['rd_req'] > 20000 or io_usage['wr_req'] > 20000):
             print('[!] I/O usage is above 20K requests/s')
             print('[!] Suspected intrusion detected.')
             print('[!] Shutting down VM...')
